@@ -5,5 +5,4 @@ const polityQuestions = [
     "options": ["బ్రిటన్", "అమెరికా (USA)", "ఐర్లాండ్", "రష్యా"],
     "answer": 1
   }
-  // మరిన్ని Polity ప్రశ్నలు...
 ];
