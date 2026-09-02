@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="te">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>APPSC Group 2 Multi-Subject Quiz</title>
+  <style>
+    body { font-family: Arial, sans-serif; background-color: #f4f6f9; display: flex; flex-direction: column; align-items: center; padding: 20px; margin: 0; }
+    
+    /* Subject Tabs */
+    .subject-tabs { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; justify-content: center; width: 100%; max-width: 850px; }
+    .tab-btn { padding: 10px 18px; border: 1px solid #007bff; background-color: #fff; color: #007bff; border-radius: 20px; cursor: pointer; font-weight: bold; font-size: 14px; transition: 0.3s; }
+    .tab-btn:hover, .tab-btn.active-tab { background-color: #007bff; color: white; }
+
+    /* Layout Wrapper */
+    .app-container { display: flex; gap: 20px; width: 100%; max-width: 850px; flex-wrap: wrap; }
+    
+    /* Main Quiz Card */
+    .quiz-card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); flex: 1; min-width: 300px; }
+    .option-btn { display: block; width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ccc; border-radius: 6px; background: #fff; cursor: pointer; text-align: left; font-size: 16px; }
+    .option-btn:hover { background-color: #e9ecef; }
+    .correct { background-color: #d4edda !important; border-color: #c3e6cb !important; }
+    .wrong { background-color: #f8d7da !important; border-color: #f5c6cb !important; }
+    .nav-btn { background-color: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; margin-top: 15px; font-size: 16px; }
+    
+    /* Side Palette Panel */
+    .palette-card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); width: 220px; }
+    .palette-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 15px; max-height: 350px; overflow-y: auto; padding-right: 5px; }
+    .palette-btn { width: 40px; height: 40px; border: 1px solid #ccc; background: #e9ecef; border-radius: 6px; cursor: pointer; font-weight: bold; }
+    .palette-btn.active { border: 2px solid #007bff; }
+    .palette-btn.answered-correct { background-color: #28a745; color: white; border: none; }
+    .palette-btn.answered-wrong { background-color: #dc3545; color: white; border: none; }
+    
+    .hidden { display: none; }
+  </style>
+</head>
+<body>
+
+<!-- Subject Navigation Tabs -->
+<div class="subject-tabs">
+  <button class="tab-btn active-tab" onclick="switchSubject('apHistory', this)">1. AP History</button>
+  <button class="tab-btn" onclick="switchSubject('indianPolity', this)">2. Indian Polity</button>
+  <button class="tab-btn" onclick="switchSubject('scienceTech', this)">3. Science & Tech</button>
+  <button class="tab-btn" onclick="switchSubject('indianEconomy', this)">4. Indian Economy</button>
+</div>
+
+<div class="app-container">
+  <!-- Main Quiz Area -->
+  <div class="quiz-card">
+    <h2 id="subject-title">AP History Quiz</h2>
+    <div id="quiz-container">
+      <h3 id="question-text">Loading...</h3>
+      <div id="options-container"></div>
+      <button id="next-btn" class="nav-btn hidden" onclick="nextQuestion()">Next Question</button>
+    </div>
+    <div id="result-container" class="hidden">
+      <h3>Quiz Completed! 🎉</h3>
+      <p id="score-text"></p>
+      <button class="nav-btn" onclick="resetQuiz()">Restart Subject Quiz</button>
+    </div>
+  </div>
+
+  <!-- Side Question Palette -->
+  <div class="palette-card" id="palette-card">
+    <h3>Questions</h3>
+    <div class="palette-grid" id="palette-grid"></div>
+  </div>
+</div>
+
+<!-- 4 Separate Subject Files linked here -->
+<script src="apHistory.js"></script>
+<script src="polity.js"></script>
+<script src="scienceTech.js"></script>
+<script src="economy.js"></script>
+
+<script>
+  let currentSubject = 'apHistory';
+  let questions = [];
+  let currentQuestionIndex = 0;
+  let score = 0;
+  let userAnswers = [];
+
+  function switchSubject(subjectKey, tabElement) {
+    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active-tab'));
+    tabElement.classList.add('active-tab');
+    
+    currentSubject = subjectKey;
+    const titles = {
+      apHistory: "AP History Quiz",
+      indianPolity: "Indian Polity Quiz",
+      scienceTech: "Science & Technology Quiz",
+      indianEconomy: "Indian Economy Quiz"
+    };
+    document.getElementById('subject-title').innerText = titles[subjectKey];
+    
+    resetQuiz();
+  }
+
+  function resetQuiz() {
+    currentQuestionIndex = 0;
+    score = 0;
+    document.getElementById('quiz-container').classList.remove('hidden');
+    document.getElementById('palette-card').classList.remove('hidden');
+    document.getElementById('result-container').classList.add('hidden');
+    loadQuestions();
+  }
+
+  function loadQuestions() {
+    // Select array based on active subject
+    if (currentSubject === 'apHistory') questions = typeof apHistoryQuestions !== 'undefined' ? apHistoryQuestions : [];
+    else if (currentSubject === 'indianPolity') questions = typeof polityQuestions !== 'undefined' ? polityQuestions : [];
+    else if (currentSubject === 'scienceTech') questions = typeof scienceTechQuestions !== 'undefined' ? scienceTechQuestions : [];
+    else if (currentSubject === 'indianEconomy') questions = typeof economyQuestions !== 'undefined' ? economyQuestions : [];
+
+    if (questions.length > 0) {
+      userAnswers = new Array(questions.length).fill(null);
+      renderPalette();
+      showQuestion();
+    } else {
+      document.getElementById('question-text').innerText = "ఈ సబ్జెక్ట్‌లో ప్రశ్నలు ఇంకా యాడ్ చేయలేదు.";
+      document.getElementById('options-container').innerHTML = '';
+      document.getElementById('palette-grid').innerHTML = '';
+    }
+  }
+
+  function renderPalette() {
+    const paletteGrid = document.getElementById('palette-grid');
+    paletteGrid.innerHTML = '';
+    
+    questions.forEach((_, index) => {
+      const btn = document.createElement('button');
+      btn.innerText = index + 1;
+      btn.classList.add('palette-btn');
+      
+      if (index === currentQuestionIndex) btn.classList.add('active');
+      if (userAnswers[index] === 'correct') btn.classList.add('answered-correct');
+      if (userAnswers[index] === 'wrong') btn.classList.add('answered-wrong');
+      
+      btn.onclick = () => jumpToQuestion(index);
+      paletteGrid.appendChild(btn);
+    });
+  }
+
+  function showQuestion() {
+    resetState();
+    renderPalette();
+    
+    const currentQ = questions[currentQuestionIndex];
+    document.getElementById('question-text').innerText = `${currentQuestionIndex + 1}. ${currentQ.question}`;
+
+    const optionsContainer = document.getElementById('options-container');
+    currentQ.options.forEach((opt, index) => {
+      const button = document.createElement('button');
+      button.innerText = opt;
+      button.classList.add('option-btn');
+      
+      if (userAnswers[currentQuestionIndex] !== null) {
+        button.disabled = true;
+        if (index === currentQ.answer) button.classList.add('correct');
+      } else {
+        button.onclick = () => selectOption(button, index, currentQ.answer);
+      }
+      
+      optionsContainer.appendChild(button);
+    });
+
+    if (userAnswers[currentQuestionIndex] !== null) {
+      document.getElementById('next-btn').classList.remove('hidden');
+    }
+  }
+
+  function resetState() {
+    document.getElementById('next-btn').classList.add('hidden');
+    document.getElementById('options-container').innerHTML = '';
+  }
+
+  function selectOption(selectedBtn, selectedIndex, correctIndex) {
+    const allBtns = document.querySelectorAll('.option-btn');
+    allBtns.forEach(btn => btn.disabled = true);
+
+    if (selectedIndex === correctIndex) {
+      selectedBtn.classList.add('correct');
+      if (userAnswers[currentQuestionIndex] === null) score++;
+      userAnswers[currentQuestionIndex] = 'correct';
+    } else {
+      selectedBtn.classList.add('wrong');
+      allBtns[correctIndex].classList.add('correct');
+      userAnswers[currentQuestionIndex] = 'wrong';
+    }
+    
+    renderPalette();
+    document.getElementById('next-btn').classList.remove('hidden');
+  }
+
+  function jumpToQuestion(index) {
+    currentQuestionIndex = index;
+    showQuestion();
+  }
+
+  function nextQuestion() {
+    currentQuestionIndex++;
+    if (currentQuestionIndex < questions.length) {
+      showQuestion();
+    } else {
+      showResult();
+    }
+  }
+
+  function showResult() {
+    document.getElementById('quiz-container').classList.add('hidden');
+    document.getElementById('palette-card').classList.add('hidden');
+    document.getElementById('result-container').classList.remove('hidden');
+    document.getElementById('score-text').innerText = `Mee Score: ${score} / ${questions.length}`;
+  }
+
+  window.onload = loadQuestions;
+</script>
+
+</body>
+</html>
