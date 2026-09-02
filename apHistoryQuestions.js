@@ -5,5 +5,4 @@ const apHistoryQuestions = [
     "options": ["ఒరుగల్లు", "హనుమకొండ", "కందూరు", "వేములవాడ"],
     "answer": 1
   }
-  // మరిన్ని AP History ప్రశ్నలు...
 ];
