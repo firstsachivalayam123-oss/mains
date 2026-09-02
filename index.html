@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="te">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>APPSC Group 2 Multi-Subject Quiz</title>
+  <style>
+    * { box-sizing: border-box; font-family: 'Segoe UI', Arial, sans-serif; margin: 0; padding: 0; }
+    body { background-color: #f0f4f8; padding: 20px; color: #333; }
+    .container { max-width: 1000px; margin: 0 auto; }
+    
+    .nav-tabs { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; justify-content: center; }
+    .tab-btn {
+      padding: 12px 20px; border: 2px solid #3b82f6; background: #fff; color: #3b82f6;
+      font-weight: bold; border-radius: 25px; cursor: pointer; transition: 0.2s;
+    }
+    .tab-btn.active, .tab-btn:hover { background: #3b82f6; color: #fff; }
+
+    .quiz-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; }
+    @media (max-width: 768px) { .quiz-grid { grid-template-columns: 1fr; } }
+
+    .card { background: #fff; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+    h2 { margin-bottom: 15px; color: #1e293b; }
+    
+    .options-list { list-style: none; margin-top: 15px; }
+    .option-item {
+      padding: 12px 16px; margin-bottom: 10px; border: 1px solid #cbd5e1;
+      border-radius: 8px; cursor: pointer; transition: 0.2s;
+    }
+    .option-item:hover { background: #eff6ff; border-color: #3b82f6; }
+    .option-item.correct { background: #dcfce7; border-color: #22c55e; color: #15803d; font-weight: bold; }
+    .option-item.wrong { background: #fee2e2; border-color: #ef4444; color: #b91c1c; font-weight: bold; }
+
+    .nav-controls { display: flex; justify-content: space-between; margin-top: 20px; }
+    .btn { padding: 10px 18px; border: none; background: #3b82f6; color: white; border-radius: 6px; cursor: pointer; }
+    .btn:disabled { background: #94a3b8; cursor: not-allowed; }
+
+    .q-palette { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-top: 15px; }
+    .q-num {
+      padding: 8px; text-align: center; border: 1px solid #cbd5e1; border-radius: 6px;
+      cursor: pointer; font-size: 14px; font-weight: bold; background: #f8fafc;
+    }
+    .q-num.answered { background: #3b82f6; color: #fff; border-color: #3b82f6; }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <div class="nav-tabs">
+      <button class="tab-btn active" onclick="switchSubject('apHistory')">1. AP History</button>
+      <button class="tab-btn" onclick="switchSubject('polity')">2. Indian Polity</button>
+      <button class="tab-btn" onclick="switchSubject('scienceTech')">3. Science & Tech</button>
+      <button class="tab-btn" onclick="switchSubject('economy')">4. Indian Economy</button>
+    </div>
+
+    <div class="quiz-grid">
+      <div class="card">
+        <h2 id="quiz-title">AP History Quiz</h2>
+        <div id="question-box">
+          <p id="question-text" style="font-size: 18px; font-weight: 600;"></p>
+          <ul class="options-list" id="options-container"></ul>
+        </div>
+        <div class="nav-controls">
+          <button class="btn" id="prev-btn" onclick="changeQuestion(-1)">Previous</button>
+          <span id="q-counter" style="align-self: center; font-weight: bold;"></span>
+          <button class="btn" id="next-btn" onclick="changeQuestion(1)">Next</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Questions List</h3>
+        <div class="q-palette" id="question-palette"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Cache busting query string added to force immediate script update -->
+  <script src="apHistory.js?v=2.0"></script>
+  <script src="polity.js?v=2.0"></script>
+  <script src="scienceTech.js?v=2.0"></script>
+  <script src="economy.js?v=2.0"></script>
+
+  <script>
+    let currentSubject = 'apHistory';
+    let currentIndex = 0;
+    let userAnswers = {};
+
+    const subjectsData = {
+      apHistory: { title: "AP History Quiz", data: typeof apHistoryQuestions !== 'undefined' ? apHistoryQuestions : [] },
+      polity: { title: "Indian Polity Quiz", data: typeof polityQuestions !== 'undefined' ? polityQuestions : [] },
+      scienceTech: { title: "Science & Technology Quiz", data: typeof scienceTechQuestions !== 'undefined' ? scienceTechQuestions : [] },
+      economy: { title: "Indian Economy Quiz", data: typeof economyQuestions !== 'undefined' ? economyQuestions : [] }
+    };
+
+    function switchSubject(subjectKey) {
+      currentSubject = subjectKey;
+      currentIndex = 0;
+      document.querySelectorAll('.tab-btn').forEach((btn, idx) => {
+        btn.classList.toggle('active', ['apHistory', 'polity', 'scienceTech', 'economy'][idx] === subjectKey);
+      });
+      document.getElementById('quiz-title').innerText = subjectsData[subjectKey].title;
+      renderQuestion();
+      renderPalette();
+    }
+
+    function renderQuestion() {
+      const qList = subjectsData[currentSubject].data;
+      if (!qList || qList.length === 0) {
+        document.getElementById('question-text').innerText = "ఈ సబ్జెక్ట్‌లో ప్రశ్నలు ఇంకా యాడ్ చేయలేదు.";
+        document.getElementById('options-container').innerHTML = "";
+        document.getElementById('q-counter').innerText = "";
+        return;
+      }
+
+      const q = qList[currentIndex];
+      document.getElementById('question-text').innerText = `${q.id}. ${q.question}`;
+      document.getElementById('q-counter').innerText = `${currentIndex + 1} / ${qList.length}`;
+      
+      const optContainer = document.getElementById('options-container');
+      optContainer.innerHTML = "";
+      
+      const selectedAns = userAnswers[`${currentSubject}_${currentIndex}`];
+
+      q.options.forEach((opt, idx) => {
+        const li = document.createElement('li');
+        li.className = "option-item";
+        li.innerText = opt;
+
+        if (selectedAns !== undefined) {
+          if (idx === q.answer) li.classList.add('correct');
+          if (selectedAns === idx && selectedAns !== q.answer) li.classList.add('wrong');
+        } else {
+          li.onclick = () => selectOption(idx);
+        }
+        optContainer.appendChild(li);
+      });
+
+      document.getElementById('prev-btn').disabled = currentIndex === 0;
+      document.getElementById('next-btn').disabled = currentIndex === qList.length - 1;
+    }
+
+    function selectOption(idx) {
+      userAnswers[`${currentSubject}_${currentIndex}`] = idx;
+      renderQuestion();
+      renderPalette();
+    }
+
+    function changeQuestion(step) {
+      currentIndex += step;
+      renderQuestion();
+    }
+
+    function renderPalette() {
+      const palette = document.getElementById('question-palette');
+      palette.innerHTML = "";
+      const qList = subjectsData[currentSubject].data;
+      
+      qList.forEach((_, idx) => {
+        const div = document.createElement('div');
+        div.className = "q-num";
+        if (userAnswers[`${currentSubject}_${idx}`] !== undefined) div.classList.add('answered');
+        div.innerText = idx + 1;
+        div.onclick = () => { currentIndex = idx; renderQuestion(); };
+        palette.appendChild(div);
+      });
+    }
+
+    window.onload = () => switchSubject('apHistory');
+  </script>
+</body>
+</html>
