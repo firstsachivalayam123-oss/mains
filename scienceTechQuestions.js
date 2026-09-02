@@ -5,5 +5,4 @@ const scienceTechQuestions = [
     "options": ["ప్రజ్ఞాన్", "విక్రమ్", "ఆదిత్య", "ధ్రువ్"],
     "answer": 1
   }
-  // మరిన్ని Science & Tech ప్రశ్నలు...
 ];
