@@ -5,5 +5,4 @@ const economyQuestions = [
     "options": ["2014", "2015", "2016", "2017"],
     "answer": 1
   }
-  // మరిన్ని Economy ప్రశ్నలు...
 ];
